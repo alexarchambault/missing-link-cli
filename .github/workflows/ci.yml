@@ -12,25 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
     - uses: actions/checkout@v2
-
-    - name: coursier cache
-      uses: actions/cache@v2.1.3
-      if: runner.OS == 'Linux'
-      with:
-        path: ~/.cache/coursier
-        key: ${{ runner.OS }}-coursier-cache-${{ hashFiles('**/*.sbt') }} # -${{ hashFiles('project/**.scala') }} (fails for now)
-        restore-keys: |
-          ${{ runner.OS }}-coursier-cache-${{ hashFiles('**/*.sbt') }}-
-          ${{ runner.OS }}-coursier-cache-
-
-    - uses: olafurpg/setup-scala@v10
-      with:
-        java-version: adopt@1.8.0-232
+    - uses: coursier/cache-action@v6.3.2
+    - uses: coursier/setup-action@v1.2.0
 
     - name: Compile
-      run: csbt test
+      run: sbtn test
 
   publish:
     needs: test
@@ -38,25 +25,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - uses: actions/checkout@v2
-
-      - name: coursier cache (Linux)
-        uses: actions/cache@v2.1.3
-        if: runner.OS == 'Linux'
-        with:
-          path: ~/.cache/coursier
-          key: ${{ runner.OS }}-coursier-cache-${{ hashFiles('**/*.sbt') }} # -${{ hashFiles('project/**.scala') }} (fails for now)
-          restore-keys: |
-            ${{ runner.OS }}-coursier-cache-${{ hashFiles('**/*.sbt') }}-
-            ${{ runner.OS }}-coursier-cache-
-
-      - uses: olafurpg/setup-scala@v10
-
+      - uses: coursier/cache-action@v6.3.2
+      - uses: coursier/setup-action@v1.2.0
       - uses: olafurpg/setup-gpg@v3
 
       - name: Release
-        run: csbt ci-release
+        run: sbtn ci-release
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
