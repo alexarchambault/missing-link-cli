@@ -2,13 +2,13 @@ name: CI
 on:
   push:
     branches:
-    - master
+    - main
     tags:
     - "v*"
   pull_request:
 
 jobs:
-  test:
+  compile:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,10 +17,10 @@ jobs:
     - uses: coursier/setup-action@v1
 
     - name: Compile
-      run: sbtn test
+      run: ./mill -i __.compile
 
   publish:
-    needs: test
+    needs: compile
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
@@ -28,10 +28,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: coursier/cache-action@v6
       - uses: coursier/setup-action@v1
-      - uses: olafurpg/setup-gpg@v3
 
       - name: Release
-        run: sbtn ci-release
+        run: ./mill -i mill.scalalib.PublishModule/publishAll --sonatypeCreds $SONATYPE_USERNAME:$SONATYPE_PASSWORD --gpgArgs --passphrase=$PGP_PASSPHRASE
         env:
           PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
           PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
